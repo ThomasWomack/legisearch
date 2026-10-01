@@ -1,4 +1,7 @@
-#!/Users/josephrichardson/Documents/python-workspace/legisearch/bin/python
+#!/usr/bin/env python3
+
+# #!/Users/josephrichardson/Documents/python-workspace/legisearch/bin/python
+
 import sys
 from legisearch.cli import main
 if __name__ == '__main__':

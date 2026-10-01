@@ -117,7 +117,7 @@ def format_event(
     items,
     fetch_matter_text=False,
     fetch_item_extra=False,
-) -> Mapping[str, Any]:
+) -> Mapping[str, Any] | None:
     event_items = {}
     # some event items are just text, and are motions or discussion
     # related to the previous item. So we keep track of the item and
@@ -157,24 +157,32 @@ def format_event(
 
         if agenda_number and agenda_number in event_items:
             append_item_data(event_items[agenda_number], item)
-        else:
+        elif agenda_number:
             event_items[agenda_number] = item
+        else:
+            # no agenda number yet, so nothing to merge into. key by id
+            # so these items don't overwrite each other
+            event_items[f'id:{item["EventItemId"]}'] = item
 
     # TODO: timezone stuff
     try:
-        date = datetime.fromisoformat(event['EventDate'])
-        if event['EventTime']:
-            try:
-                hour = parse(event['EventTime']).time()
-            except Exception:
-                print(f'failed to parse time for {event}, using noon')
-                hour = time(12)
-        else:
-            hour = time(12)
-        dt = datetime.combine(date.date(), hour)
-        event['datetime'] = dt
+        try:
+            date = datetime.fromisoformat(event['EventDate'])
+        except ValueError:
+            date = parse(event['EventDate'])
     except Exception as e:
-        print(f'failed to parse date {event} {e}')
+        # meeting_time is required, so skip the event rather than fail on insert
+        print(f'failed to parse date, skipping event {event.get("EventId")}: {e}')
+        return None
+    if event['EventTime']:
+        try:
+            hour = parse(event['EventTime']).time()
+        except Exception:
+            print(f'failed to parse time for {event}, using noon')
+            hour = time(12)
+    else:
+        hour = time(12)
+    event['datetime'] = datetime.combine(date.date(), hour)
     event['items'] = list(event_items.values())
     return event
 

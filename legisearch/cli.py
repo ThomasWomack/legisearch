@@ -109,9 +109,12 @@ def parser() -> argparse.ArgumentParser:
 async def do_search(namespace, query=None, body=None, year=None):
     columns = ('body_id', 'meeting_time', 'matter_type', 'agenda_number',
                'title', 'action_text')
-    print('|'.join(columns))
+    #print('|'.join(columns))
     async for result in search(namespace, search_string=query, body=body, year=year):
-        print('|'.join(str(result[col]) for col in columns))
+        for col in columns:
+            value = str(result[col])
+            print(col + ":", value)
+        print()
 
 
 async def bodies(namespace):
